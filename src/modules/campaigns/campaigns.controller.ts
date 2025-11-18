@@ -49,7 +49,7 @@ export class CampaignsController {
     @GetUser('id') organizerId: string,
     @Body() createDto: CreateCampaignDto,
   ) {
-    return await this.campaignsService.create(organizerId, createDto);
+    return this.campaignsService.create(organizerId, createDto);
   }
 
   @Post('propose')
@@ -65,17 +65,14 @@ export class CampaignsController {
     @GetUser('id') beneficiaryId: string,
     @Body() proposeDto: ProposeCampaignDto,
   ) {
-    return await this.campaignsService.proposeCampaign(
-      beneficiaryId,
-      proposeDto,
-    );
+    return this.campaignsService.proposeCampaign(beneficiaryId, proposeDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Listar campañas (público)' })
   @ApiResponse({ status: HTTP_STATUS.OK, description: 'Lista de campañas' })
   async findAll(@Query() filters: FilterCampaignsDto) {
-    return await this.campaignsService.findAll(filters);
+    return this.campaignsService.findAll(filters);
   }
 
   @Get('proposed')
@@ -85,14 +82,14 @@ export class CampaignsController {
   @ApiOperation({ summary: 'Ver campañas propuestas pendientes' })
   @ApiResponse({ status: HTTP_STATUS.OK, description: 'Propuestas pendientes' })
   async getProposed() {
-    return await this.campaignsService.getProposedCampaigns();
+    return this.campaignsService.getProposedCampaigns();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Ver detalle de campaña' })
   @ApiResponse({ status: HTTP_STATUS.OK, description: 'Detalle de campaña' })
   async findOne(@Param('id') id: string) {
-    return await this.campaignsService.findOne(id);
+    return this.campaignsService.findOne(id);
   }
 
   @Patch(':id')
@@ -106,7 +103,7 @@ export class CampaignsController {
     @GetUser('id') organizerId: string,
     @Body() updateDto: UpdateCampaignDto,
   ) {
-    return await this.campaignsService.update(id, organizerId, updateDto);
+    return this.campaignsService.update(id, organizerId, updateDto);
   }
 
   @Patch(':id/validate')
@@ -121,7 +118,7 @@ export class CampaignsController {
     @Body('approve') approve: boolean,
     @Body('rejection_reason') rejectionReason?: string,
   ) {
-    return await this.campaignsService.validateProposal(
+    return this.campaignsService.validateProposal(
       id,
       organizerId,
       approve,
@@ -136,7 +133,7 @@ export class CampaignsController {
   @ApiOperation({ summary: 'Marcar campaña como completada' })
   @ApiResponse({ status: HTTP_STATUS.OK, description: 'Campaña completada' })
   async complete(@Param('id') id: string, @GetUser('id') organizerId: string) {
-    return await this.campaignsService.markAsCompleted(id, organizerId);
+    return this.campaignsService.markAsCompleted(id, organizerId);
   }
 
   @Patch(':id/cancel')

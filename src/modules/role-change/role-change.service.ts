@@ -19,9 +19,9 @@ import { UserRole } from '../../common/enums/user-role.enum';
 export class RoleChangeService {
   constructor(
     @InjectRepository(RoleChangeRequest)
-    private roleChangeRepository: Repository<RoleChangeRequest>,
+    private readonly roleChangeRepository: Repository<RoleChangeRequest>,
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async requestRoleChange(
@@ -34,17 +34,14 @@ export class RoleChangeService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    // Validar que no solicite el mismo rol que ya tiene
     if (user.role === requestRoleChangeDto.requested_role) {
       throw new BadRequestException('Ya tienes ese rol asignado');
     }
 
-    // Validar que no se pueda solicitar rol de Admin
     if (requestRoleChangeDto.requested_role === UserRole.ADMIN) {
       throw new ForbiddenException('No puedes solicitar rol de administrador');
     }
 
-    // Verificar si ya existe una solicitud pendiente
     const existingRequest = await this.roleChangeRepository.findOne({
       where: {
         user: { id: userId },
@@ -87,7 +84,7 @@ export class RoleChangeService {
 
     const [data, total] = await query
       .orderBy('request.created_at', sort.toUpperCase() as 'ASC' | 'DESC')
-      .skip(page)
+      .skip(page * limit)
       .take(limit)
       .getManyAndCount();
 
@@ -122,8 +119,10 @@ export class RoleChangeService {
       where: { id: adminId },
     });
 
-    if (!admin) {
-      throw new NotFoundException('Administrador no encontrado');
+    if (!admin || admin.role !== UserRole.ADMIN) {
+      throw new ForbiddenException(
+        'Solo administradores pueden revisar solicitudes',
+      );
     }
 
     request.status = reviewDto.status;
@@ -131,7 +130,6 @@ export class RoleChangeService {
     request.reviewed_by = admin;
     request.reviewed_at = new Date();
 
-    // Si fue aprobada, actualizar el rol del usuario
     if (reviewDto.status === RoleChangeStatus.APPROVED) {
       const user = await this.userRepository.findOne({
         where: { id: request.user.id },
@@ -148,13 +146,17 @@ export class RoleChangeService {
     // TODO: Enviar notificación al usuario
 
     return {
-      message: `Solicitud ${reviewDto.status === RoleChangeStatus.APPROVED ? 'aprobada' : 'rechazada'} exitosamente`,
+      message: `Solicitud ${
+        reviewDto.status === RoleChangeStatus.APPROVED
+          ? 'aprobada'
+          : 'rechazada'
+      } exitosamente`,
       data: updated,
     };
   }
 
   async getUserRequests(userId: string): Promise<RoleChangeRequest[]> {
-    return await this.roleChangeRepository.find({
+    return this.roleChangeRepository.find({
       where: { user: { id: userId } },
       relations: ['reviewed_by'],
       order: { created_at: 'DESC' },

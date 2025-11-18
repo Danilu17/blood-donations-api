@@ -36,7 +36,7 @@ export class AuthController {
     description: 'Email o DNI ya registrados',
   })
   async register(@Body() registerDto: RegisterDto) {
-    return await this.authService.register(registerDto);
+    return this.authService.register(registerDto);
   }
 
   @Post('login')
@@ -50,7 +50,7 @@ export class AuthController {
     description: 'Credenciales inválidas',
   })
   async login(@Body() loginDto: LoginDto) {
-    return await this.authService.login(loginDto);
+    return this.authService.login(loginDto);
   }
 
   @Get('verify-email')
@@ -60,7 +60,7 @@ export class AuthController {
     description: 'Email verificado exitosamente',
   })
   async verifyEmail(@Query('token') token: string) {
-    return await this.authService.verifyEmail(token);
+    return this.authService.verifyEmail(token);
   }
 
   @Post('forgot-password')
@@ -70,7 +70,7 @@ export class AuthController {
     description: 'Email de recuperación enviado',
   })
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-    return await this.authService.forgotPassword(forgotPasswordDto);
+    return this.authService.forgotPassword(forgotPasswordDto);
   }
 
   @Post('reset-password')
@@ -80,6 +80,6 @@ export class AuthController {
     description: 'Contraseña actualizada exitosamente',
   })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    return await this.authService.resetPassword(resetPasswordDto);
+    return this.authService.resetPassword(resetPasswordDto);
   }
 }

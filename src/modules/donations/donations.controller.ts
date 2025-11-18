@@ -13,66 +13,66 @@ import { CreateDonationDto } from './dto/create-donation.dto';
 import { StandardizeResponseInterceptor } from '../../common/interceptors/standardize-response.interceptor';
 import { HTTP_STATUS } from '../../common/constants/http-status.constant';
 
-@ApiTags('Donations')
+@ApiTags('donations')
 @Controller('donations')
 @UseInterceptors(
   new StandardizeResponseInterceptor({
-    defaultMessage: 'Operation completed successfully',
+    defaultMessage: 'Operación exitosa',
   }),
 )
 export class DonationsController {
   constructor(private readonly donationsService: DonationsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Schedule a blood donation' })
+  @ApiOperation({ summary: 'Programar una donación de sangre' })
   @ApiResponse({
     status: HTTP_STATUS.CREATED,
-    description: 'Donation scheduled successfully',
+    description: 'Donación programada correctamente',
   })
   async create(@Body() createDonationDto: CreateDonationDto) {
-    return await this.donationsService.create(createDonationDto);
+    return this.donationsService.create(createDonationDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all donations' })
+  @ApiOperation({ summary: 'Listar todas las donaciones' })
   @ApiResponse({
     status: HTTP_STATUS.OK,
-    description: 'Donations retrieved successfully',
+    description: 'Donaciones obtenidas correctamente',
   })
   async findAll() {
-    return await this.donationsService.findAll();
+    return this.donationsService.findAll();
   }
 
   @Get('donor/:donorId')
-  @ApiOperation({ summary: 'Get donations by donor' })
+  @ApiOperation({ summary: 'Listar donaciones por donante' })
   @ApiResponse({
     status: HTTP_STATUS.OK,
-    description: 'Donor donations retrieved successfully',
+    description: 'Donaciones del donante obtenidas correctamente',
   })
   async findByDonor(@Param('donorId') donorId: string) {
-    return await this.donationsService.findByDonor(donorId);
+    return this.donationsService.findByDonor(donorId);
   }
 
   @Patch(':id/complete')
-  @ApiOperation({ summary: 'Complete a donation and register quantity' })
+  @ApiOperation({ summary: 'Completar una donación y registrar cantidad' })
   @ApiResponse({
     status: HTTP_STATUS.OK,
-    description: 'Donation completed successfully',
+    description: 'Donación completada correctamente',
   })
   async completeDonation(
     @Param('id') id: string,
     @Body('quantity_ml') quantity_ml: number,
   ) {
-    return await this.donationsService.completeDonation(id, quantity_ml);
+    return this.donationsService.completeDonation(id, quantity_ml);
   }
 
   @Get(':id/certificate')
-  @ApiOperation({ summary: 'Generate donation certificate' })
+  @ApiOperation({ summary: 'Generar certificado de donación' })
   @ApiResponse({
     status: HTTP_STATUS.OK,
-    description: 'Certificate generated successfully',
+    description: 'Certificado generado correctamente',
   })
   async generateCertificate(@Param('id') id: string) {
-    return await this.donationsService.generateCertificate(id);
+    return this.donationsService.generateCertificate(id);
   }
 }

@@ -1,4 +1,3 @@
-// src/modules/donations/donations.service.ts
 import {
   Injectable,
   NotFoundException,
@@ -12,15 +11,15 @@ import { UsersService } from '../users/users.service';
 import { CampaignsService } from '../campaigns/campaigns.service';
 import { v4 as uuidv4 } from 'uuid';
 import { DonationStatus } from '../../common/enums/donation-status.enum';
-import { UserRole } from 'src/common/enums/user-role.enum';
+import { UserRole } from '../../common/enums/user-role.enum';
 
 @Injectable()
 export class DonationsService {
   constructor(
     @InjectRepository(Donation)
-    private donationsRepository: Repository<Donation>,
-    private usersService: UsersService,
-    private campaignsService: CampaignsService,
+    private readonly donationsRepository: Repository<Donation>,
+    private readonly usersService: UsersService,
+    private readonly campaignsService: CampaignsService,
   ) {}
 
   async create(createDonationDto: CreateDonationDto): Promise<Donation> {
@@ -30,13 +29,11 @@ export class DonationsService {
     );
 
     if (donor.role !== UserRole.DONOR) {
-      throw new BadRequestException(
-        'Solo los donantes pueden realizar donaciones',
-      );
+      throw new BadRequestException('Solo usuarios donantes pueden donar');
     }
 
     if (campaign.current_donors >= campaign.max_donors) {
-      throw new BadRequestException('Campaign is full');
+      throw new BadRequestException('La campaña ya alcanzó el cupo máximo');
     }
 
     const donation = this.donationsRepository.create({
@@ -78,6 +75,18 @@ export class DonationsService {
 
     if (!donation) {
       throw new NotFoundException(`Donation with ID ${id} not found`);
+    }
+
+    if (donation.status === DonationStatus.COMPLETED) {
+      throw new BadRequestException(
+        'La donación ya está marcada como completa',
+      );
+    }
+
+    if (!quantity_ml || quantity_ml <= 0) {
+      throw new BadRequestException(
+        'La cantidad en ml debe ser un número positivo',
+      );
     }
 
     donation.status = DonationStatus.COMPLETED;

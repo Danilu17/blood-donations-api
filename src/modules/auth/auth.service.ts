@@ -9,19 +9,19 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { User } from '../users/entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
-    private jwtService: JwtService,
+    private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async register(
@@ -60,13 +60,14 @@ export class AuthService {
 
     const savedUser = await this.userRepository.save(newUser);
 
-    // Aquí deberías enviar el email de verificación usando un servicio real
-    // await this.sendVerificationEmail(email, verificationToken);
+    // TODO: enviar email real de verificación con verificationToken
 
-    // Retorna solo datos públicos
     const {
       password: _,
       email_verification_token: __,
+      email_verification_expiry: ___,
+      password_reset_token,
+      password_reset_expiry,
       ...publicUser
     } = savedUser;
 
@@ -87,7 +88,6 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Convierte a Date si es string
     const lockedUntil = user.account_locked_until
       ? new Date(user.account_locked_until)
       : null;
@@ -128,7 +128,6 @@ export class AuthService {
       throw new UnauthorizedException('Tu cuenta ha sido desactivada');
     }
 
-    // Reinicia intentos fallidos y desbloquea si corresponde
     if ((user.failed_login_attempts ?? 0) > 0 || user.account_locked_until) {
       user.failed_login_attempts = 0;
       user.account_locked_until = null;
@@ -166,6 +165,12 @@ export class AuthService {
       );
     }
 
+    if (user.is_email_verified) {
+      return {
+        message: 'El email ya estaba verificado',
+      };
+    }
+
     user.is_email_verified = true;
     user.email_verification_token = null;
     user.email_verification_expiry = null;
@@ -184,7 +189,6 @@ export class AuthService {
 
     const user = await this.userRepository.findOne({ where: { email } });
 
-    // No revelar si el email existe
     if (user) {
       const resetToken = randomBytes(32).toString('hex');
       const resetExpiry = new Date();
@@ -195,8 +199,7 @@ export class AuthService {
 
       await this.userRepository.save(user);
 
-      // Aquí deberías enviar el email de recuperación usando un servicio real
-      // await this.sendPasswordResetEmail(email, resetToken);
+      // TODO: enviar email real con resetToken
     }
 
     return {

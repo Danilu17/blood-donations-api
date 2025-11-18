@@ -50,7 +50,7 @@ export class RoleChangeController {
     @GetUser('id') userId: string,
     @Body() requestRoleChangeDto: RequestRoleChangeDto,
   ) {
-    return await this.roleChangeService.requestRoleChange(
+    return this.roleChangeService.requestRoleChange(
       userId,
       requestRoleChangeDto,
     );
@@ -61,7 +61,7 @@ export class RoleChangeController {
   @ApiOperation({ summary: 'Listar todas las solicitudes (Admin)' })
   @ApiResponse({ status: HTTP_STATUS.OK, description: 'Lista de solicitudes' })
   async findAll(@Query() filters: FilterRoleChangeDto) {
-    return await this.roleChangeService.findAll(filters);
+    return this.roleChangeService.findAll(filters);
   }
 
   @Get('my-requests')
@@ -71,7 +71,7 @@ export class RoleChangeController {
     description: 'Mis solicitudes',
   })
   async getMyRequests(@GetUser('id') userId: string) {
-    return await this.roleChangeService.getUserRequests(userId);
+    return this.roleChangeService.getUserRequests(userId);
   }
 
   @Get(':id')
@@ -79,7 +79,7 @@ export class RoleChangeController {
   @ApiOperation({ summary: 'Ver detalle de solicitud' })
   @ApiResponse({ status: HTTP_STATUS.OK, description: 'Detalle de solicitud' })
   async findOne(@Param('id') id: string) {
-    return await this.roleChangeService.findOne(id);
+    return this.roleChangeService.findOne(id);
   }
 
   @Patch(':id/review')
@@ -94,6 +94,6 @@ export class RoleChangeController {
     @GetUser('id') adminId: string,
     @Body() reviewDto: ReviewRoleChangeDto,
   ) {
-    return await this.roleChangeService.reviewRequest(id, adminId, reviewDto);
+    return this.roleChangeService.reviewRequest(id, adminId, reviewDto);
   }
 }

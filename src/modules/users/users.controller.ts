@@ -44,7 +44,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Crear usuario (solo Admin)' })
   @ApiResponse({ status: HTTP_STATUS.CREATED, description: 'Usuario creado' })
   async create(@Body() createUserDto: CreateUserDto) {
-    return await this.usersService.create(createUserDto);
+    return this.usersService.create(createUserDto);
   }
 
   @Get()
@@ -52,7 +52,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Listar usuarios con filtros' })
   @ApiResponse({ status: HTTP_STATUS.OK, description: 'Lista de usuarios' })
   async findAll(@Query() filters: FilterUsersDto) {
-    return await this.usersService.findAll(filters);
+    return this.usersService.findAll(filters);
   }
 
   @Get(':id')
@@ -63,14 +63,14 @@ export class UsersController {
     description: 'Usuario no encontrado',
   })
   async findOne(@Param('id') id: string) {
-    return await this.usersService.findOne(id);
+    return this.usersService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar usuario' })
   @ApiResponse({ status: HTTP_STATUS.OK, description: 'Usuario actualizado' })
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return await this.usersService.update(id, updateUserDto);
+    return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')

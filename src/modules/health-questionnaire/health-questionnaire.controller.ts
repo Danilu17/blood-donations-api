@@ -53,7 +53,7 @@ export class HealthQuestionnaireController {
     @GetUser('id') donorId: string,
     @Body() createDto: CreateHealthQuestionnaireDto,
   ) {
-    return await this.questionnaireService.create(donorId, createDto);
+    return this.questionnaireService.create(donorId, createDto);
   }
 
   @Get()
@@ -64,7 +64,7 @@ export class HealthQuestionnaireController {
     description: 'Lista de cuestionarios',
   })
   async findAll(@Query() filters: FilterHealthQuestionnaireDto) {
-    return await this.questionnaireService.findAll(filters);
+    return this.questionnaireService.findAll(filters);
   }
 
   @Get('my-questionnaires')
@@ -72,7 +72,7 @@ export class HealthQuestionnaireController {
   @ApiOperation({ summary: 'Ver mis cuestionarios (Donante)' })
   @ApiResponse({ status: HTTP_STATUS.OK, description: 'Mis cuestionarios' })
   async getMyQuestionnaires(@GetUser('id') donorId: string) {
-    return await this.questionnaireService.findByDonor(donorId);
+    return this.questionnaireService.findByDonor(donorId);
   }
 
   @Get('my-status')
@@ -97,7 +97,7 @@ export class HealthQuestionnaireController {
     description: 'Detalle del cuestionario',
   })
   async findOne(@Param('id') id: string) {
-    return await this.questionnaireService.findOne(id);
+    return this.questionnaireService.findOne(id);
   }
 
   @Patch(':id')
@@ -111,7 +111,7 @@ export class HealthQuestionnaireController {
     @Param('id') id: string,
     @Body() updateDto: UpdateHealthQuestionnaireDto,
   ) {
-    return await this.questionnaireService.update(id, updateDto);
+    return this.questionnaireService.update(id, updateDto);
   }
 
   @Delete(':id')

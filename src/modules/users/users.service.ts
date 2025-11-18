@@ -1,11 +1,10 @@
-// src/modules/users/users.service.ts
 import {
   Injectable,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -20,9 +19,6 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  // ============================================================
-  // CREATE USER
-  // ============================================================
   async create(createUserDto: CreateUserDto): Promise<User> {
     const emailExists = await this.userRepository.findOne({
       where: { email: createUserDto.email },
@@ -32,6 +28,14 @@ export class UsersService {
       throw new ConflictException('El email ya está registrado');
     }
 
+    const dniExists = await this.userRepository.findOne({
+      where: { dni: createUserDto.dni },
+    });
+
+    if (dniExists) {
+      throw new ConflictException('El DNI ya está registrado');
+    }
+
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
     const user = this.userRepository.create({
@@ -39,12 +43,9 @@ export class UsersService {
       password: hashedPassword,
     });
 
-    return await this.userRepository.save(user);
+    return this.userRepository.save(user);
   }
 
-  // ============================================================
-  // GET USERS WITH FILTERS
-  // ============================================================
   async findAll(filters: FilterUsersDto): Promise<IPaginatedResponse<User>> {
     const { role, search, sort = 'desc', limit = 10, page = 0 } = filters;
 
@@ -54,15 +55,18 @@ export class UsersService {
       query.andWhere('user.role = :role', { role });
     }
 
-    query.andWhere(
-      `(user.first_name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search)`,
-      { search: `%${search}%` },
-    );
+    if (search) {
+      const like = `%${search}%`;
+      query.andWhere(
+        '(user.first_name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search)',
+        { search: like },
+      );
+    }
 
     const [data, total] = await query
       .orderBy('user.created_at', sort.toUpperCase() as 'ASC' | 'DESC')
-      .take(limit)
       .skip(page * limit)
+      .take(limit)
       .getManyAndCount();
 
     return {
@@ -73,9 +77,6 @@ export class UsersService {
     };
   }
 
-  // ============================================================
-  // FIND ONE USER
-  // ============================================================
   async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
@@ -88,9 +89,6 @@ export class UsersService {
     return user;
   }
 
-  // ============================================================
-  // UPDATE USER
-  // ============================================================
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
 
@@ -100,12 +98,9 @@ export class UsersService {
 
     Object.assign(user, updateUserDto);
 
-    return await this.userRepository.save(user);
+    return this.userRepository.save(user);
   }
 
-  // ============================================================
-  // DELETE USER (SOFT DELETE)
-  // ============================================================
   async remove(id: string): Promise<void> {
     const result = await this.userRepository.softDelete(id);
 
@@ -114,13 +109,10 @@ export class UsersService {
     }
   }
 
-  // ============================================================
-  // INCREASE DONATION COUNT
-  // ============================================================
   async updateDonationCount(id: string): Promise<void> {
     const result = await this.userRepository.increment(
       { id },
-      'donationCount',
+      'donation_count',
       1,
     );
 

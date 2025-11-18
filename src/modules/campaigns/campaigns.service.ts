@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Campaign } from './entities/campaign.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
@@ -20,9 +20,9 @@ import { UserRole } from '../../common/enums/user-role.enum';
 export class CampaignsService {
   constructor(
     @InjectRepository(Campaign)
-    private campaignRepository: Repository<Campaign>,
+    private readonly campaignRepository: Repository<Campaign>,
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async create(organizerId: string, createDto: CreateCampaignDto) {
@@ -34,7 +34,6 @@ export class CampaignsService {
       throw new ForbiddenException('Solo organizadores pueden crear campañas');
     }
 
-    // Validar fecha futura
     const campaignDate = new Date(createDto.campaign_date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -43,14 +42,12 @@ export class CampaignsService {
       throw new BadRequestException('La fecha debe ser futura');
     }
 
-    // Validar horarios
     if (createDto.start_time >= createDto.end_time) {
       throw new BadRequestException(
         'La hora de inicio debe ser anterior a la de finalización',
       );
     }
 
-    // Validar solapamiento en misma ubicación
     await this.validateOverlap(
       createDto.campaign_date,
       createDto.start_time,
@@ -59,7 +56,15 @@ export class CampaignsService {
     );
 
     const campaign = this.campaignRepository.create({
-      ...createDto,
+      name: (createDto as any).name ?? (createDto as any).title, // por si el DTO tiene title
+      location: createDto.location,
+      address: (createDto as any).address ?? createDto.location,
+      campaign_date: createDto.campaign_date,
+      start_time: createDto.start_time,
+      end_time: createDto.end_time,
+      max_donors:
+        (createDto as any).max_donors ?? (createDto as any).capacity ?? 0,
+      current_donors: 0,
       organizer,
       status: CampaignStatus.ACTIVE,
     });
@@ -83,7 +88,6 @@ export class CampaignsService {
       );
     }
 
-    // Validar fecha futura
     const campaignDate = new Date(proposeDto.campaign_date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -93,7 +97,15 @@ export class CampaignsService {
     }
 
     const campaign = this.campaignRepository.create({
-      ...proposeDto,
+      name: (proposeDto as any).name ?? (proposeDto as any).title,
+      location: proposeDto.location,
+      address: (proposeDto as any).address ?? proposeDto.location,
+      campaign_date: proposeDto.campaign_date,
+      start_time: proposeDto.start_time,
+      end_time: proposeDto.end_time,
+      max_donors:
+        (proposeDto as any).max_donors ?? (proposeDto as any).capacity ?? 0,
+      current_donors: 0,
       proposed_by: beneficiary,
       status: CampaignStatus.PROPOSED,
     });
@@ -132,7 +144,7 @@ export class CampaignsService {
     if (approve) {
       campaign.status = CampaignStatus.ACTIVE;
       campaign.organizer = organizer;
-      campaign.rejection_reason;
+      campaign.rejection_reason = null;
     } else {
       campaign.status = CampaignStatus.CANCELLED;
       campaign.rejection_reason = rejectionReason || 'No especificado';
@@ -195,7 +207,7 @@ export class CampaignsService {
 
     const [data, total] = await query
       .orderBy('campaign.campaign_date', sort.toUpperCase() as 'ASC' | 'DESC')
-      .skip(page)
+      .skip(page * limit)
       .take(limit)
       .getManyAndCount();
 
@@ -222,8 +234,7 @@ export class CampaignsService {
   ): Promise<Campaign> {
     const campaign = await this.findOne(id);
 
-    // Validar permisos
-    if (campaign.organizer.id !== organizerId) {
+    if (!campaign.organizer || campaign.organizer.id !== organizerId) {
       throw new ForbiddenException(
         'Solo el organizador de esta campaña puede editarla',
       );
@@ -235,7 +246,6 @@ export class CampaignsService {
       );
     }
 
-    // Validar fecha si se modifica
     if (updateDto.campaign_date) {
       const newDate = new Date(updateDto.campaign_date);
       const today = new Date();
@@ -246,7 +256,6 @@ export class CampaignsService {
       }
     }
 
-    // Validar horarios si se modifican
     const startTime = updateDto.start_time || campaign.start_time;
     const endTime = updateDto.end_time || campaign.end_time;
 
@@ -258,13 +267,13 @@ export class CampaignsService {
 
     Object.assign(campaign, updateDto);
 
-    return await this.campaignRepository.save(campaign);
+    return this.campaignRepository.save(campaign);
   }
 
   async cancel(id: string, organizerId: string): Promise<void> {
     const campaign = await this.findOne(id);
 
-    if (campaign.organizer.id !== organizerId) {
+    if (!campaign.organizer || campaign.organizer.id !== organizerId) {
       throw new ForbiddenException(
         'Solo el organizador puede cancelar esta campaña',
       );
@@ -304,7 +313,7 @@ export class CampaignsService {
   async markAsCompleted(id: string, organizerId: string): Promise<Campaign> {
     const campaign = await this.findOne(id);
 
-    if (campaign.organizer.id !== organizerId) {
+    if (!campaign.organizer || campaign.organizer.id !== organizerId) {
       throw new ForbiddenException(
         'Solo el organizador puede completar esta campaña',
       );
@@ -317,11 +326,11 @@ export class CampaignsService {
     }
 
     campaign.status = CampaignStatus.COMPLETED;
-    return await this.campaignRepository.save(campaign);
+    return this.campaignRepository.save(campaign);
   }
 
   async getProposedCampaigns(): Promise<Campaign[]> {
-    return await this.campaignRepository.find({
+    return this.campaignRepository.find({
       where: { status: CampaignStatus.PROPOSED },
       relations: ['proposed_by'],
       order: { created_at: 'DESC' },
@@ -343,7 +352,6 @@ export class CampaignsService {
         '(campaign.start_time < :endTime AND campaign.end_time > :startTime)',
         { startTime, endTime },
       )
-
       .getOne();
 
     if (overlapping) {

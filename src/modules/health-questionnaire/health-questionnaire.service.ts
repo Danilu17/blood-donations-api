@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HealthQuestionnaire } from './entities/health-questionnaire.entity';
@@ -17,9 +13,9 @@ import { EligibilityStatus } from '../../common/enums/eligibility-status.enum';
 export class HealthQuestionnaireService {
   constructor(
     @InjectRepository(HealthQuestionnaire)
-    private questionnaireRepository: Repository<HealthQuestionnaire>,
+    private readonly questionnaireRepository: Repository<HealthQuestionnaire>,
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async create(donorId: string, createDto: CreateHealthQuestionnaireDto) {
@@ -29,13 +25,14 @@ export class HealthQuestionnaireService {
       throw new NotFoundException('Donante no encontrado');
     }
 
-    // Crear cuestionario
     const questionnaire = this.questionnaireRepository.create({
       ...createDto,
+      last_donation_date: createDto.last_donation_date
+        ? (new Date(createDto.last_donation_date) as any)
+        : null,
       donor,
     });
 
-    // Evaluar elegibilidad automáticamente
     this.evaluateEligibility(questionnaire);
 
     const saved = await this.questionnaireRepository.save(questionnaire);
@@ -46,25 +43,20 @@ export class HealthQuestionnaireService {
     };
   }
 
-  /**
-   * Evalúa la elegibilidad del donante basándose en sus respuestas
-   */
   private evaluateEligibility(questionnaire: HealthQuestionnaire): void {
     const reasons: string[] = [];
 
-    // Validar peso mínimo
-    if (questionnaire.weight_kg < 50) {
+    if (Number(questionnaire.weight_kg) < 50) {
       reasons.push('Peso inferior a 50 kg');
     }
 
-    // Validar última donación (mínimo 8 semanas = 56 días para hombres, 12 semanas para mujeres)
     if (questionnaire.last_donation_date) {
       const daysSinceLastDonation = this.getDaysDifference(
         new Date(questionnaire.last_donation_date),
         new Date(),
       );
 
-      const minDays = 56; // Simplificado, ajustar según género si está disponible
+      const minDays = 56;
 
       if (daysSinceLastDonation < minDays) {
         reasons.push(
@@ -77,7 +69,6 @@ export class HealthQuestionnaireService {
       }
     }
 
-    // Validar respuestas de descarte
     if (questionnaire.has_chronic_disease) {
       reasons.push('Presenta enfermedad crónica - requiere evaluación médica');
     }
@@ -110,7 +101,6 @@ export class HealthQuestionnaireService {
       reasons.push('Vacuna reciente - debe esperar 7 días');
     }
 
-    // Determinar estado final
     if (reasons.length === 0) {
       questionnaire.eligibility_status = EligibilityStatus.ELIGIBLE;
       questionnaire.ineligibility_reasons = null;
@@ -127,9 +117,6 @@ export class HealthQuestionnaireService {
     }
   }
 
-  /**
-   * Calcula próxima fecha elegible para donar
-   */
   async calculateNextEligibleDate(donorId: string): Promise<Date | null> {
     const latest = await this.questionnaireRepository.findOne({
       where: { donor: { id: donorId } },
@@ -158,7 +145,7 @@ export class HealthQuestionnaireService {
 
     const [data, total] = await query
       .orderBy('questionnaire.created_at', sort.toUpperCase() as 'ASC' | 'DESC')
-      .skip(page)
+      .skip(page * limit)
       .take(limit)
       .getManyAndCount();
 
@@ -179,14 +166,14 @@ export class HealthQuestionnaireService {
   }
 
   async findByDonor(donorId: string): Promise<HealthQuestionnaire[]> {
-    return await this.questionnaireRepository.find({
+    return this.questionnaireRepository.find({
       where: { donor: { id: donorId } },
       order: { created_at: 'DESC' },
     });
   }
 
   async getLatestByDonor(donorId: string): Promise<HealthQuestionnaire | null> {
-    return await this.questionnaireRepository.findOne({
+    return this.questionnaireRepository.findOne({
       where: { donor: { id: donorId } },
       order: { created_at: 'DESC' },
     });
@@ -198,12 +185,22 @@ export class HealthQuestionnaireService {
   ): Promise<HealthQuestionnaire> {
     const questionnaire = await this.findOne(id);
 
-    Object.assign(questionnaire, updateDto);
+    if (updateDto.last_donation_date) {
+      (questionnaire as any).last_donation_date = new Date(
+        updateDto.last_donation_date,
+      );
+    }
 
-    // Reevaluar elegibilidad
+    Object.assign(questionnaire, {
+      ...updateDto,
+      last_donation_date: updateDto.last_donation_date
+        ? (new Date(updateDto.last_donation_date) as any)
+        : questionnaire.last_donation_date,
+    });
+
     this.evaluateEligibility(questionnaire);
 
-    return await this.questionnaireRepository.save(questionnaire);
+    return this.questionnaireRepository.save(questionnaire);
   }
 
   async remove(id: string): Promise<void> {
@@ -213,7 +210,6 @@ export class HealthQuestionnaireService {
     }
   }
 
-  // Utilidades privadas
   private getDaysDifference(date1: Date, date2: Date): number {
     const diffTime = Math.abs(date2.getTime() - date1.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
