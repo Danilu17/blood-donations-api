@@ -9,6 +9,14 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { RoleChangeModule } from './modules/role-change/role-change.module';
 import { HealthQuestionnaireModule } from './modules/health-questionnaire/health-questionnaire.module';
+import { CertificatesModule } from './modules/certificates/certificates.module';
+import { CampaignsModule } from './modules/campaigns/campaigns.module';
+import { Donation } from './modules/donations/entities/donation.entity';
+import { DonationsModule } from './modules/donations/donations.module';
+import { Volunteer } from './modules/volunteers/entities/volunteer.entity';
+import { VolunteersModule } from './modules/volunteers/volunteers.module';
+import { Center } from './modules/centers/entities/center.entity';
+import { CentersModule } from './modules/centers/centers.module';
 
 @Module({
   imports: [
@@ -54,10 +62,11 @@ import { HealthQuestionnaireModule } from './modules/health-questionnaire/health
     UsersModule,
     RoleChangeModule,
     HealthQuestionnaireModule,
-    // 👇 Más adelante vamos agregando:
-    // CampaignsModule,
-    // DonationsModule,
-    // etc.
+    CertificatesModule,
+    DonationsModule,
+    CampaignsModule,
+    VolunteersModule,
+    CentersModule,
   ],
 
   providers: [

@@ -1,4 +1,15 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateBloodRequestDto } from './create-blood-request.dto';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { BloodRequestStatus } from '../entities/blood-request.entity';
 
-export class UpdateBloodRequestDto extends PartialType(CreateBloodRequestDto) {}
+export class UpdateBloodRequestDto {
+  @ApiPropertyOptional({ enum: BloodRequestStatus })
+  @IsOptional()
+  @IsEnum(BloodRequestStatus)
+  status?: BloodRequestStatus;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  rejection_reason?: string;
+}

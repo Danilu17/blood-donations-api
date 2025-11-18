@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
-import { BloodRequestsService } from './blood-requests.service';
-import { BloodRequestsController } from './blood-requests.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { BloodRequest } from './entities/blood-request.entity';
+import { BloodRequestController } from './blood-requests.controller';
+import { BloodRequestService } from './blood-requests.service';
+import { User } from '../users/entities/user.entity';
 
 @Module({
-  controllers: [BloodRequestsController],
-  providers: [BloodRequestsService],
+  imports: [TypeOrmModule.forFeature([BloodRequest, User])],
+  controllers: [BloodRequestController],
+  providers: [BloodRequestService],
 })
-export class BloodRequestsModule {}
+export class BloodRequestModule {}

@@ -2,44 +2,54 @@ import {
   Controller,
   Get,
   Post,
-  Body,
   Patch,
+  Body,
   Param,
-  Delete,
+  Query,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { BloodRequestsService } from './blood-requests.service';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { BloodRequestService } from './blood-requests.service';
 import { CreateBloodRequestDto } from './dto/create-blood-request.dto';
 import { UpdateBloodRequestDto } from './dto/update-blood-request.dto';
+import { FilterBloodRequestDto } from './dto/filter-blood-request.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { UserRole } from '../../common/enums/user-role.enum';
+import { GetUser } from '../../common/decorators/get-user.decorator';
+import { StandardizeResponseInterceptor } from '../../common/interceptors/standardize-response.interceptor';
 
-@Controller('blood-requests')
-export class BloodRequestsController {
-  constructor(private readonly bloodRequestsService: BloodRequestsService) {}
+@ApiTags('blood-request')
+@ApiBearerAuth()
+@Controller('blood-request')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@UseInterceptors(
+  new StandardizeResponseInterceptor({ defaultMessage: 'Operación exitosa' }),
+)
+export class BloodRequestController {
+  constructor(private readonly service: BloodRequestService) {}
 
   @Post()
-  create(@Body() createBloodRequestDto: CreateBloodRequestDto) {
-    return this.bloodRequestsService.create(createBloodRequestDto);
+  @Roles(UserRole.DONOR, UserRole.BENEFICIARY)
+  create(@GetUser('id') userId: string, @Body() dto: CreateBloodRequestDto) {
+    return this.service.create(userId, dto);
   }
 
   @Get()
-  findAll() {
-    return this.bloodRequestsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bloodRequestsService.findOne(+id);
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
+  findAll(@Query() filters: FilterBloodRequestDto) {
+    return this.service.findAll(filters);
   }
 
   @Patch(':id')
+  @Roles(UserRole.ADMIN)
   update(
     @Param('id') id: string,
-    @Body() updateBloodRequestDto: UpdateBloodRequestDto,
+    @GetUser('id') adminId: string,
+    @Body() dto: UpdateBloodRequestDto,
   ) {
-    return this.bloodRequestsService.update(+id, updateBloodRequestDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.bloodRequestsService.remove(+id);
+    return this.service.update(id, adminId, dto);
   }
 }
