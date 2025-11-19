@@ -2,6 +2,6 @@ export enum CampaignStatus {
   ACTIVE = 'active',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
-  //SCHEDULED = 'scheduled',
+  SCHEDULED = 'scheduled',
   PROPOSED = 'proposed',
 }
