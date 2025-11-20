@@ -45,7 +45,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Eliminamos verificación de email
+    // Marcamos al usuario como verificado por defecto
     const newUser = this.userRepository.create({
       ...userData,
       email,
@@ -69,7 +69,10 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<{
+    message: string;
+    data: { access_token: string; user: Partial<User> };
+  }> {
     const { email, password } = loginDto;
     const user = await this.userRepository.findOne({ where: { email } });
 
@@ -109,6 +112,7 @@ export class AuthService {
       throw new UnauthorizedException('Tu cuenta ha sido desactivada');
     }
 
+    // Reiniciar intentos fallidos
     user.failed_login_attempts = 0;
     user.account_locked_until = null;
     await this.userRepository.save(user);

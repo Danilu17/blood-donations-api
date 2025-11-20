@@ -1,11 +1,10 @@
-import { Controller, Post, Body, Get, Query, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-
 import { HTTP_STATUS } from '../../common/constants/http-status.constant';
 
 @ApiTags('auth')
@@ -28,7 +27,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @HttpCode(200)
+  @HttpCode(200) // ← Fuerza el código 200 OK
   @ApiOperation({ summary: 'Iniciar sesión' })
   @ApiResponse({
     status: HTTP_STATUS.OK,
@@ -46,7 +45,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Solicitar recuperación de contraseña' })
   @ApiResponse({
     status: HTTP_STATUS.OK,
-    description: 'Email de recuperación enviado',
+    description: 'Token de recuperación generado',
   })
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto);
