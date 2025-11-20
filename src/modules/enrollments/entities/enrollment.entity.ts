@@ -11,10 +11,18 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Campaign } from '../../campaigns/entities/campaign.entity';
 
+/**
+ * Estados posibles para una inscripción a una campaña.
+ * - pending: el organizador aún no confirma la inscripción.
+ * - confirmed: inscripción confirmada y cupo ocupado.
+ * - cancelled: la inscripción fue cancelada por el donante u organizador.
+ * - waitlist: la campaña ya alcanzó el cupo máximo, el donante queda en lista de espera.
+ */
 export enum EnrollmentStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
   CANCELLED = 'cancelled',
+  WAITLIST = 'waitlist',
 }
 
 @Entity('enrollments')
