@@ -7,11 +7,13 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { User } from '../users/entities/user.entity';
 import { JwtStrategy } from '../../common/strategies/jwt.strategy';
+import { MailModule } from '../../common/services/mail.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     PassportModule,
+    // Configuración del JWT con variables de entorno
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -22,6 +24,8 @@ import { JwtStrategy } from '../../common/strategies/jwt.strategy';
         },
       }),
     }),
+    // Importar el módulo de correo para poder inyectar MailService
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

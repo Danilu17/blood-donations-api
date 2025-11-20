@@ -1,27 +1,15 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Query,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { StandardizeResponseInterceptor } from '../../common/interceptors/standardize-response.interceptor';
+
 import { HTTP_STATUS } from '../../common/constants/http-status.constant';
 
 @ApiTags('auth')
 @Controller('auth')
-@UseInterceptors(
-  new StandardizeResponseInterceptor({
-    defaultMessage: 'Operación exitosa',
-  }),
-)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -40,6 +28,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Iniciar sesión' })
   @ApiResponse({
     status: HTTP_STATUS.OK,
@@ -51,16 +40,6 @@ export class AuthController {
   })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
-  }
-
-  @Get('verify-email')
-  @ApiOperation({ summary: 'Verificar email' })
-  @ApiResponse({
-    status: HTTP_STATUS.OK,
-    description: 'Email verificado exitosamente',
-  })
-  async verifyEmail(@Query('token') token: string) {
-    return this.authService.verifyEmail(token);
   }
 
   @Post('forgot-password')

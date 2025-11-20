@@ -8,7 +8,6 @@ import {
   Param,
   Delete,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,18 +22,13 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums/user-role.enum';
-import { StandardizeResponseInterceptor } from '../../common/interceptors/standardize-response.interceptor';
+
 import { HTTP_STATUS } from '../../common/constants/http-status.constant';
 
 @ApiTags('certificates')
 @ApiBearerAuth()
 @Controller('certificates')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@UseInterceptors(
-  new StandardizeResponseInterceptor({
-    defaultMessage: 'Operación exitosa',
-  }),
-)
 export class CertificatesController {
   constructor(private readonly certificatesService: CertificatesService) {}
 

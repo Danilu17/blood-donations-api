@@ -54,21 +54,6 @@ export class User {
   is_email_verified: boolean;
 
   @Column({
-    name: 'email_verification_token',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
-  email_verification_token: string | null;
-
-  @Column({
-    name: 'email_verification_expiry',
-    type: 'datetime',
-    nullable: true,
-  })
-  email_verification_expiry: Date | null;
-
-  @Column({
     name: 'password_reset_token',
     type: 'varchar',
     length: 255,

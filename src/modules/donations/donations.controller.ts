@@ -1,25 +1,12 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Patch,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { DonationsService } from './donations.service';
 import { CreateDonationDto } from './dto/create-donation.dto';
-import { StandardizeResponseInterceptor } from '../../common/interceptors/standardize-response.interceptor';
+
 import { HTTP_STATUS } from '../../common/constants/http-status.constant';
 
 @ApiTags('donations')
 @Controller('donations')
-@UseInterceptors(
-  new StandardizeResponseInterceptor({
-    defaultMessage: 'Operación exitosa',
-  }),
-)
 export class DonationsController {
   constructor(private readonly donationsService: DonationsService) {}
 

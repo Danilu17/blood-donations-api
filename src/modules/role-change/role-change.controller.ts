@@ -7,7 +7,6 @@ import {
   Param,
   Query,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,18 +23,13 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { UserRole } from '../../common/enums/user-role.enum';
-import { StandardizeResponseInterceptor } from '../../common/interceptors/standardize-response.interceptor';
+
 import { HTTP_STATUS } from '../../common/constants/http-status.constant';
 
 @ApiTags('roles')
 @ApiBearerAuth()
 @Controller('role-change')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@UseInterceptors(
-  new StandardizeResponseInterceptor({
-    defaultMessage: 'Operación exitosa',
-  }),
-)
 export class RoleChangeController {
   constructor(private readonly roleChangeService: RoleChangeService) {}
 

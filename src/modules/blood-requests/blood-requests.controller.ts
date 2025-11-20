@@ -7,7 +7,6 @@ import {
   Param,
   Query,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { BloodRequestService } from './blood-requests.service';
@@ -19,15 +18,11 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { GetUser } from '../../common/decorators/get-user.decorator';
-import { StandardizeResponseInterceptor } from '../../common/interceptors/standardize-response.interceptor';
 
 @ApiTags('blood-request')
 @ApiBearerAuth()
 @Controller('blood-request')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@UseInterceptors(
-  new StandardizeResponseInterceptor({ defaultMessage: 'Operación exitosa' }),
-)
 export class BloodRequestController {
   constructor(private readonly service: BloodRequestService) {}
 
