@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Patch,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { UserRole } from '../../common/enums/user-role.enum';
 
 @Controller('notifications')
+@UseGuards(JwtAuthGuard)
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
+  // Crear notificación (solo para administradores u organizadores)
   @Post()
-  create(@Body() createNotificationDto: CreateNotificationDto) {
-    return this.notificationsService.create(createNotificationDto);
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
+  create(@Body() dto: CreateNotificationDto) {
+    return this.notificationsService.create(dto);
   }
 
+  // Obtener notificaciones del usuario autenticado
   @Get()
-  findAll() {
-    return this.notificationsService.findAll();
+  getMyNotifications(@Req() req: any, @Query('unread') unread: string) {
+    const userId = req.user.id;
+    const unreadOnly = unread === 'true';
+    return this.notificationsService.findForUser(userId, unreadOnly);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.notificationsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateNotificationDto: UpdateNotificationDto) {
-    return this.notificationsService.update(+id, updateNotificationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.notificationsService.remove(+id);
+  // Marcar una notificación como leída
+  @Patch(':id/read')
+  markRead(@Param('id') id: string, @Req() req: any) {
+    const userId = req.user.id;
+    return this.notificationsService.markAsRead(id, userId);
   }
 }

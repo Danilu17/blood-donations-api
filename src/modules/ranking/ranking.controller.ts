@@ -1,34 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { RankingService } from './ranking.service';
-import { CreateRankingDto } from './dto/create-ranking.dto';
-import { UpdateRankingDto } from './dto/update-ranking.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @Controller('ranking')
+@UseGuards(JwtAuthGuard)
 export class RankingController {
   constructor(private readonly rankingService: RankingService) {}
 
-  @Post()
-  create(@Body() createRankingDto: CreateRankingDto) {
-    return this.rankingService.create(createRankingDto);
-  }
-
+  // Ranking global
   @Get()
-  findAll() {
-    return this.rankingService.findAll();
+  getAll() {
+    return this.rankingService.getRankingList();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.rankingService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRankingDto: UpdateRankingDto) {
-    return this.rankingService.update(+id, updateRankingDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.rankingService.remove(+id);
+  // Ranking del usuario autenticado
+  @Get('me')
+  getMine(@Req() req: any) {
+    const userId = req.user.id;
+    return this.rankingService.getUserRanking(userId);
   }
 }
