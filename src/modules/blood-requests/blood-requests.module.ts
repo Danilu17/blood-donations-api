@@ -1,3 +1,4 @@
+// src/modules/blood-requests/blood-requests.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BloodRequest } from './entities/blood-request.entity';
@@ -9,5 +10,6 @@ import { User } from '../users/entities/user.entity';
   imports: [TypeOrmModule.forFeature([BloodRequest, User])],
   controllers: [BloodRequestController],
   providers: [BloodRequestService],
+  exports: [BloodRequestService],
 })
 export class BloodRequestModule {}

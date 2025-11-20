@@ -32,10 +32,6 @@ export class DonationsService {
       throw new BadRequestException('Solo usuarios donantes pueden donar');
     }
 
-    if (campaign.current_donors >= campaign.max_donors) {
-      throw new BadRequestException('La campaña ya alcanzó el cupo máximo');
-    }
-
     const donation = this.donationsRepository.create({
       donor,
       campaign,
@@ -45,11 +41,8 @@ export class DonationsService {
       notes: createDonationDto.notes ?? null,
     });
 
-    const savedDonation = await this.donationsRepository.save(donation);
-
-    await this.campaignsService.incrementDonorCount(campaign.id);
-
-    return savedDonation;
+    const saved = await this.donationsRepository.save(donation);
+    return saved;
   }
 
   async findAll(): Promise<Donation[]> {
@@ -95,7 +88,6 @@ export class DonationsService {
     donation.certificate_id = uuidv4();
 
     const updatedDonation = await this.donationsRepository.save(donation);
-
     await this.usersService.updateDonationCount(donation.donor.id);
 
     return updatedDonation;
@@ -118,25 +110,28 @@ export class DonationsService {
     }
 
     return {
-      certificateId: donation.certificate_id,
-      donationId: donation.id,
-      donor: {
-        name: donation.donor.name,
-        bloodType: donation.donor.blood_type,
-        email: donation.donor.email,
+      message: 'Certificado generado',
+      data: {
+        certificateId: donation.certificate_id,
+        donationId: donation.id,
+        donor: {
+          name: donation.donor.name,
+          bloodType: donation.donor.blood_type,
+          email: donation.donor.email,
+        },
+        campaign: {
+          name: donation.campaign.name,
+          location: donation.campaign.location,
+          address: donation.campaign.address,
+        },
+        donationDetails: {
+          date: donation.actual_date,
+          scheduledDate: donation.scheduled_date,
+          scheduledTime: donation.scheduled_time,
+          quantityMl: donation.quantity_ml,
+        },
+        generatedAt: new Date().toISOString(),
       },
-      campaign: {
-        name: donation.campaign.name,
-        location: donation.campaign.location,
-        address: donation.campaign.address,
-      },
-      donationDetails: {
-        date: donation.actual_date,
-        scheduledDate: donation.scheduled_date,
-        scheduledTime: donation.scheduled_time,
-        quantityMl: donation.quantity_ml,
-      },
-      generatedAt: new Date().toISOString(),
     };
   }
 }

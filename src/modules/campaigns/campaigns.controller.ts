@@ -43,6 +43,7 @@ export class CampaignsController {
     @GetUser('id') organizerId: string,
     @Body() createDto: CreateCampaignDto,
   ) {
+    console.log(createDto);
     return this.campaignsService.create(organizerId, createDto);
   }
 

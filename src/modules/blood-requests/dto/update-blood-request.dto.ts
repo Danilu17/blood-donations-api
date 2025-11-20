@@ -11,5 +11,5 @@ export class UpdateBloodRequestDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  rejection_reason?: string;
+  review_notes?: string;
 }

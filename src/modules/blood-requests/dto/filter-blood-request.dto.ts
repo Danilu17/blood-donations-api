@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsInt, Min } from 'class-validator';
+import { IsEnum, IsOptional, IsInt, Min, IsString } from 'class-validator';
 import { BloodRequestStatus } from '../entities/blood-request.entity';
 
 export class FilterBloodRequestDto {
@@ -7,6 +7,11 @@ export class FilterBloodRequestDto {
   @IsOptional()
   @IsEnum(BloodRequestStatus)
   status?: BloodRequestStatus;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  beneficiaryId?: string;
 
   @ApiPropertyOptional({ default: 10 })
   @IsOptional()

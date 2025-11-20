@@ -13,7 +13,8 @@ export enum BloodRequestStatus {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
-  RESOLVED = 'RESOLVED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
 }
 
 @Entity('blood_requests')
@@ -45,7 +46,7 @@ export class BloodRequest {
   status: BloodRequestStatus;
 
   @Column({ type: 'text', nullable: true })
-  rejection_reason?: string;
+  review_notes?: string;
 
   @CreateDateColumn()
   created_at: Date;
